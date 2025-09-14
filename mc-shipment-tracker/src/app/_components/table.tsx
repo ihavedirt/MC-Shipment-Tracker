@@ -9,9 +9,22 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
+type Row = {
+  id: number;
+  order_number: string;
+  carrier: string;
+  order_date: string;
+  est_arrival_date: string;
+}
+
+//{ data }: { data: Row[] }
 export default function BasicTable() {
+  /*if (!data || data.length === 0) {
+    return <div>No data available</div>;
+  }*/
+
   return (
-    <TableContainer component={Paper} sx={{ maxHeight: '500px' }}>
+    <TableContainer component={Paper} sx={{ maxHeight: '700px' }}>
       <Table sx={{ minWidth: 650 }} aria-label="simple table" stickyHeader>
         <TableHead>
           <TableRow>
@@ -99,6 +112,30 @@ const tableData = [{
   "est_arrival_date": "12/28/2025"
 }, {
   "id": 10,
+  "order_number": "122238611",
+  "carrier": "Labadie, Hayes and Bahringer",
+  "order_date": "8/13/2025",
+  "est_arrival_date": "12/15/2024"
+}, {
+  "id": 11,
+  "order_number": "122238611",
+  "carrier": "Labadie, Hayes and Bahringer",
+  "order_date": "8/13/2025",
+  "est_arrival_date": "12/15/2024"
+}, {
+  "id": 12,
+  "order_number": "122238611",
+  "carrier": "Labadie, Hayes and Bahringer",
+  "order_date": "8/13/2025",
+  "est_arrival_date": "12/15/2024"
+}, {
+  "id": 13,
+  "order_number": "122238611",
+  "carrier": "Labadie, Hayes and Bahringer",
+  "order_date": "8/13/2025",
+  "est_arrival_date": "12/15/2024"
+}, {
+  "id": 14,
   "order_number": "122238611",
   "carrier": "Labadie, Hayes and Bahringer",
   "order_date": "8/13/2025",
