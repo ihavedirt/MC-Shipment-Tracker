@@ -1,15 +1,16 @@
 import { NextResponse, NextRequest } from 'next/server';
 
+// Create a new tracking
 export async function POST(req: NextRequest) {
     // clientside payload
     const body = await req.json();
     const trackingNumber = body.trackingNumber;
 
-    const base = process.env.AFTERSHIP_BASE_URL + '/tracking';
-    const apiKey = process.env.AFTERSHIP_API_KEY;
+    const base = process.env.TRACKINGMORE_BASE_URL + '/trackings/create';
+    const apiKey = process.env.TRACKINGMORE_API_KEY;
 
     if (!base || !apiKey) {
-        return NextResponse.json({ error: 'Missing Aftership configuration' }, { status: 500 });
+        return NextResponse.json({ error: 'Missing TrackingMore configuration' }, { status: 500 });
     }
 
     const url = new URL(base);
@@ -18,16 +19,17 @@ export async function POST(req: NextRequest) {
     const res = await fetch(url, {
         method: 'POST',
         headers: {
-            'app-name': 'mc-shipment-tracker',
             'Content-Type': 'application/json',
-            'trackship-api-key': apiKey,
+            'Tracking-Api-Key': apiKey,
         },
         body: JSON.stringify({
             tracking_number: trackingNumber,
-            tracking_provider: 'ups',
+            courier_code: 'ups',
         }),
     });
 
-    const data = await res.json();
-    return NextResponse.json(data);
+    const text = await res.text();
+
+    const data = JSON.parse(text);
+    return NextResponse.json(data, { status: 200 });
 }
