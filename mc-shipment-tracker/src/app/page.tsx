@@ -8,7 +8,8 @@ export default function Home() {
   const [currentTrackingNumber, setCurrentTrackingNumber] = useState("");
   const [tableData, setTableData] = useState<TableRowData[]>([]);
 
-
+  // makes a POST request to the tracking api
+  // input: tracking number/order number as a string
   async function sendTrackingNumber(trackingNumber: string) {
     try{
       const res = await fetch("/api/tracking", {

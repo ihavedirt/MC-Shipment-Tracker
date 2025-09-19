@@ -15,6 +15,19 @@ export async function POST(req: NextRequest) {
 
     const url = new URL(base);
 
+    let courierCode = '';
+
+    // turn this into a function where it takes tracking number and returns string
+    if (trackingNumber.length == 18) {
+        courierCode = 'ups';
+    } else if (trackingNumber.length == 10) {
+        courierCode = 'dhl';
+    } else if (trackingNumber.length == 12) {
+        courierCode = 'fedex';
+    } else {
+        console.log('Unknown carrier code format detected');
+    }
+
     // fetch to aftership
     const res = await fetch(url, {
         method: 'POST',
@@ -24,7 +37,7 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
             tracking_number: trackingNumber,
-            courier_code: 'ups',
+            courier_code: courierCode,
         }),
     });
 
