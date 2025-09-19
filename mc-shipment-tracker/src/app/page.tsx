@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import BasicTable, { TableRowData }  from './_components/table'
@@ -28,7 +29,7 @@ export default function Home() {
         (item: any, index: number) => ({
           id: index + 1,
           order_number: item.tracking_number ?? 'N/A',
-          carrier: item.carrier_code ?? 'N/A',
+          carrier: item.courier_code ?? 'N/A',
           order_date: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
           est_arrival_date: item.expected_delivery ? new Date(item.expected_delivery).toLocaleDateString() : 'N/A',
         })
@@ -58,7 +59,7 @@ export default function Home() {
         (item: any, index: number) => ({
           id: index + 1,
           order_number: item.tracking_number ?? 'N/A',
-          carrier: item.carrier_code ?? 'N/A',
+          carrier: item.courier_code ?? 'N/A',
           order_date: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
           est_arrival_date: item.expected_delivery ? new Date(item.expected_delivery).toLocaleDateString() : 'N/A',
         })
