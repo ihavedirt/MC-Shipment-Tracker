@@ -1,26 +1,73 @@
 'use client'
 
-import BasicTable from './_components/table'
+import BasicTable, { TableRowData }  from './_components/table'
 import { Button, TextField } from '@mui/material';
 import { useState } from 'react';
 
 export default function Home() {
   const [currentTrackingNumber, setCurrentTrackingNumber] = useState("");
-  const [tableData, setTableData] = useState("");
+  const [tableData, setTableData] = useState<TableRowData[]>([]);
 
 
   async function sendTrackingNumber(trackingNumber: string) {
-    const res = await fetch("/api/tracking", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ trackingNumber }),
-    });
+    try{
+      const res = await fetch("/api/tracking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ trackingNumber }),
+      });
 
-    const data = await res.json();
-    console.log(data);
-    setTableData(data);
+      const response = await res.json();
+      console.log(response);
+
+      // convert data to TableRowData[]
+      const rows: TableRowData[] = response.data.map(
+        (item: any, index: number) => ({
+          id: index + 1,
+          order_number: item.tracking_number ?? 'N/A',
+          carrier: item.carrier_code ?? 'N/A',
+          order_date: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+          est_arrival_date: item.expected_delivery ? new Date(item.expected_delivery).toLocaleDateString() : 'N/A',
+        })
+      )
+
+      setTableData(rows);
+    }
+    catch(e) {
+      console.error(e);
+    }
+  }
+
+  async function fetchAllTrackings() {
+    try{
+      const res = await fetch("/api/tracking", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const response = await res.json();
+      console.log(response);
+
+      // convert data to TableRowData[]
+      const rows: TableRowData[] = response.data.map(
+        (item: any, index: number) => ({
+          id: index + 1,
+          order_number: item.tracking_number ?? 'N/A',
+          carrier: item.carrier_code ?? 'N/A',
+          order_date: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+          est_arrival_date: item.expected_delivery ? new Date(item.expected_delivery).toLocaleDateString() : 'N/A',
+        })
+      )
+
+      setTableData(rows);
+    }
+    catch(e) {
+      console.error(e);
+    }
   }
 
   return (
@@ -37,11 +84,19 @@ export default function Home() {
           onClick={() => sendTrackingNumber(currentTrackingNumber)}
           style={{ marginLeft: '10px' }}
         >
-          Submit
+          Create Tracking
+        </Button>
+
+        <Button
+          variant='contained'
+          onClick={() => fetchAllTrackings()}
+          style={{ marginRight: '10px', float: 'right' }}
+        >
+          Get all Trackings
         </Button>
       </div>
       <div style={{ marginTop: '20px' }}>
-        <BasicTable/>
+        <BasicTable data={tableData} />
       </div>
     </div>
   );

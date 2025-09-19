@@ -9,19 +9,18 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-type Row = {
-  id: number;
+export type TableRowData = {
+  id: number | string;
   order_number: string;
   carrier: string;
   order_date: string;
   est_arrival_date: string;
-}
+};
 
-//{ data }: { data: Row[] }
-export default function BasicTable() {
-  /*if (!data || data.length === 0) {
+export default function BasicTable({ data }: { data: TableRowData[] }) {
+  if (!data) {
     return <div>No data available</div>;
-  }*/
+  }
 
   return (
     <TableContainer component={Paper} sx={{ maxHeight: '700px' }}>
@@ -36,7 +35,7 @@ export default function BasicTable() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {tableData.map((row) => (
+          {data.map((row) => (
             <TableRow
               key={row.id}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
