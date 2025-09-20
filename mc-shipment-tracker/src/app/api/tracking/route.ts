@@ -9,8 +9,11 @@ export async function POST(req: NextRequest) {
     const base = process.env.TRACKINGMORE_BASE_URL + '/trackings/create';
     const apiKey = process.env.TRACKINGMORE_API_KEY;
 
-    if (!base || !apiKey) {
-        return NextResponse.json({ error: 'Missing TrackingMore configuration' }, { status: 500 });
+    if (!base) {
+        return NextResponse.json({ error: 'Missing TrackingMore configuration(URL)' }, { status: 500 });
+    }
+    if (!apiKey) {
+        return NextResponse.json({ error: 'Missing TrackingMore configuration(KEY)' }, { status: 500 });
     }
 
     const url = new URL(base);
