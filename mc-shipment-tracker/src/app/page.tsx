@@ -1,14 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import BasicTable, { TableRowData }  from './_components/table'
+import BasicTable, { TableRowData }  from './components/table'
 import { Button, TextField } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../utils/supabase/client';
 
 export default function Home() {
   const [currentTrackingNumber, setCurrentTrackingNumber] = useState("");
   const [tableData, setTableData] = useState<TableRowData[]>([]);
+  const [session, setSession] = useState<any>(null);
 
+  const fetchSession = async () => {
+    const currentSession = await supabase.auth.getSession();
+    setSession(currentSession.data)
+  }
+
+  useEffect(() => {
+    fetchSession();
+  }, []);
+  
   // makes a POST request to the tracking api
   // input: tracking number/order number as a string
   async function sendTrackingNumber(trackingNumber: string) {
@@ -28,10 +39,11 @@ export default function Home() {
       const rows: TableRowData[] = response.data.map(
         (item: any, index: number) => ({
           id: index + 1,
-          order_number: item.tracking_number ?? 'N/A',
+          tracking_number: item.tracking_number ?? 'N/A',
           carrier: item.courier_code ?? 'N/A',
-          order_date: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
-          est_arrival_date: item.expected_delivery ? new Date(item.expected_delivery).toLocaleDateString() : 'N/A',
+          est_delivery: item.scheduled_delivery_date ? new Date(item.scheduled_delivery_date).toLocaleDateString() : 'N/A',
+          delivered: item.delivered ?? 'N/A',
+          delayed: item.delayed ?? 'N/A'
         })
       )
 
@@ -58,10 +70,12 @@ export default function Home() {
       const rows: TableRowData[] = response.data.map(
         (item: any, index: number) => ({
           id: index + 1,
-          order_number: item.tracking_number ?? 'N/A',
+          tracking_number: item.tracking_number ?? 'N/A',
           carrier: item.courier_code ?? 'N/A',
-          order_date: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
-          est_arrival_date: item.expected_delivery ? new Date(item.expected_delivery).toLocaleDateString() : 'N/A',
+          est_delivery: item.scheduled_delivery_date ? new Date(item.scheduled_delivery_date).toLocaleDateString() : 'N/A',
+          delivered: item.delivered ?? 'N/A',
+          delayed: item.delayed ?? 'N/A'
+          // if item.delivery_status == 'delivered' or 'delayed'
         })
       )
 
@@ -84,7 +98,7 @@ export default function Home() {
         <Button 
           variant='contained'
           onClick={() => sendTrackingNumber(currentTrackingNumber)}
-          style={{ marginLeft: '10px' }}
+          style={{ marginLeft: '10px', background: '#4c42a0ff' }}
         >
           Create Tracking
         </Button>

@@ -9,18 +9,21 @@ export async function POST(req: NextRequest) {
     const base = process.env.TRACKINGMORE_BASE_URL + '/trackings/create';
     const apiKey = process.env.TRACKINGMORE_API_KEY;
 
+    if (!base && !apiKey) {
+        return NextResponse.json({ error: 'POST() Missing TrackingMore configuration(URL & KEY)' }, { status: 500 });
+    }
     if (!base) {
-        return NextResponse.json({ error: 'Missing TrackingMore configuration(URL)' }, { status: 500 });
+        return NextResponse.json({ error: 'POST() Missing TrackingMore configuration(URL)' }, { status: 500 });
     }
     if (!apiKey) {
-        return NextResponse.json({ error: 'Missing TrackingMore configuration(KEY)' }, { status: 500 });
+        return NextResponse.json({ error: 'POST() Missing TrackingMore configuration(KEY)' }, { status: 500 });
     }
 
     const url = new URL(base);
 
-    let courierCode = '';
-
+    // this detects the courier
     // turn this into a function where it takes tracking number and returns string
+    let courierCode = '';
     if (trackingNumber.length == 18) {
         courierCode = 'ups';
     } else if (trackingNumber.length == 10) {
@@ -28,7 +31,7 @@ export async function POST(req: NextRequest) {
     } else if (trackingNumber.length == 12) {
         courierCode = 'fedex';
     } else {
-        console.log('Unknown carrier code format detected');
+        console.log('Unknown courier code format detected');
     }
 
     // fetch to aftership
@@ -58,8 +61,14 @@ export async function GET() {
     const base = process.env.TRACKINGMORE_BASE_URL + '/trackings/get';
     const apiKey = process.env.TRACKINGMORE_API_KEY;
 
-    if (!base || !apiKey) {
-        return NextResponse.json({ error: 'Missing TrackingMore configuration' }, { status: 500 });
+    if (!base && !apiKey) {
+        return NextResponse.json({ error: 'GET() Missing TrackingMore configuration(URL & KEY)' }, { status: 500 });
+    }
+    if (!base) {
+        return NextResponse.json({ error: 'GET() Missing TrackingMore configuration(URL)' }, { status: 500 });
+    }
+    if (!apiKey) {
+        return NextResponse.json({ error: 'GET() Missing TrackingMore configuration(KEY)' }, { status: 500 });
     }
 
     const url = new URL(base);

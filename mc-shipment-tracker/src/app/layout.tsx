@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ResponsiveAppBar from "./_components/appBar";
+import ResponsiveAppBar from "./components/appBar";
 import "./globals.css";
 
 export const metadata: Metadata = {
