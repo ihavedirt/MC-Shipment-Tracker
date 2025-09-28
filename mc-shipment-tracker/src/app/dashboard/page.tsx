@@ -2,9 +2,10 @@
 'use client'
 
 import BasicTable, { TableRowData }  from '../components/table'
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, Card } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../utils/supabase/client';
+import NewTracking from '../components/newTracking';
 
 export default function Dashboard() {
   const [currentTrackingNumber, setCurrentTrackingNumber] = useState("");
@@ -111,6 +112,11 @@ export default function Dashboard() {
           >
             Create Tracking
           </Button>
+
+          <Card style={{ width: '70%', padding: "20px", marginTop: "20px" }}>
+            <NewTracking />
+          </Card>
+          
         </form>
 
         <Button
