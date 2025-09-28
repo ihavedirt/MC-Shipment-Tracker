@@ -3,11 +3,14 @@
 import { useState, FormEvent } from 'react';
 import { Button, TextField, Card } from '@mui/material';
 import { supabase } from '../../../utils/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export default function Auth() {
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    const router = useRouter();
 
     const handleAuth = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -25,13 +28,16 @@ export default function Auth() {
                 console.error('Error signing in:', signInError.message);
                 return;
             }
+            else {
+                router.push('/dashboard');
+            }
         }
     };
 
     return (
         <div style={{ maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', padding: '20px'}}>
-            <Card>
-                <h2 style={{color: 'blue'}}>{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
+            <Card style={{ padding: '30px' }}>
+                <h2 style={{color: 'gray'}}>{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
                 <form onSubmit={handleAuth}>
                     <TextField
                         type="email"
@@ -66,7 +72,7 @@ export default function Auth() {
                             style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
                         />
                     </> : <></>}
-                    <Button type="submit" style={{ width: '100%', padding: '10px' }}>
+                    <Button variant='contained' type="submit" style={{ width: '90%', padding: '10px', marginLeft: 'auto', marginRight: 'auto', display: 'block' }}>
                         {isSignUp ? 'Sign Up' : 'Sign In'}
                     </Button>
                 </form>
