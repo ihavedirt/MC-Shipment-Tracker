@@ -12,9 +12,6 @@ export default function Home() {
       <Button variant="contained" onClick={() => router.push("/login")}>
         Login / Sign Up
       </Button>
-      <p>on time scheduling</p>
-      <p>customer retention</p>
-      <p>automation</p>
     </div>
   );
 }

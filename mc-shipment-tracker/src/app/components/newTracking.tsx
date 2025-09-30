@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { TextField, Select, MenuItem, Button } from '@mui/material';
 import EmailList from './emailList';
+import { TableRowData } from './table';
 
-export default function NewTracking() {
+type prop = {onSuccess: () => void};
+
+export default function NewTracking({ onSuccess }: prop) {
   const [emails, setEmails] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -22,9 +25,41 @@ export default function NewTracking() {
     setEmails((prev) => prev.filter((e) => e !== email));
   };
 
-  const handleCreate = () => {
-    // TODO: submit data to api and then insert into db
+  // makes a POST request to the tracking api
+  // input: tracking number/order number as a string
+  async function sendTrackingNumber(trackingNumber: string) {
+    try{
+      const res = await fetch("/api/tracking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ trackingNumber }),
+      });
 
+      const response = await res.json();
+      console.log(response);
+
+      // convert data to TableRowData
+      const row: TableRowData = {
+        tracking_number: response.tracking_number ?? 'N/A',
+        reference: reference ?? 'N/A',
+        carrier: response.courier_code ?? 'N/A',
+        est_delivery: response.scheduled_delivery_date
+          ? new Date(response.scheduled_delivery_date).toLocaleDateString()
+          : 'N/A',
+        delivered: response.delivered ?? 'N/A',
+        delayed: response.delayed ?? 'N/A',
+      };
+      onSuccess();
+    }
+    catch(e) {
+      console.error(e);
+    }
+  }
+
+  const handleCreate = () => {
+    sendTrackingNumber(trackingNumber);
   };
 
   return (

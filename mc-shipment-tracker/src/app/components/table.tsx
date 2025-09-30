@@ -10,7 +10,6 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
 export type TableRowData = {
-  id: number | string;
   tracking_number: string;
   reference: string;
   carrier: string;
@@ -39,13 +38,13 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {data.map((row) => (
+          {data.map((row, index) => (
             <TableRow
-              key={row.id}
+              key={index}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row">
-                {row.id}
+                {index}
               </TableCell>
               <TableCell align="right">{row.tracking_number}</TableCell>
               <TableCell align="right">{row.reference}</TableCell>
