@@ -12,10 +12,11 @@ import Paper from '@mui/material/Paper';
 export type TableRowData = {
   id: number | string;
   tracking_number: string;
+  reference: string;
   carrier: string;
   est_delivery: string;
+  delayed: string;
   delivered: string;
-  delayed: string
 };
 
 export default function BasicTable({ data }: { data: TableRowData[] }) {
@@ -30,10 +31,11 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
           <TableRow>
             <TableCell>No.</TableCell>
             <TableCell align="right">Tracking Number</TableCell>
+            <TableCell align="right">Reference</TableCell>
             <TableCell align="right">Carrier</TableCell>
             <TableCell align="right">Est. Delivery</TableCell>
-            <TableCell align="right">Delivered</TableCell>
             <TableCell align="right">Delayed</TableCell>
+            <TableCell align="right">Delivered</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -46,10 +48,11 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
                 {row.id}
               </TableCell>
               <TableCell align="right">{row.tracking_number}</TableCell>
+              <TableCell align="right">{row.reference}</TableCell>
               <TableCell align="right">{row.carrier}</TableCell>
               <TableCell align="right">{row.est_delivery}</TableCell>
-              <TableCell align="right">{row.delivered}</TableCell>
               <TableCell align="right">{row.delayed}</TableCell>
+              <TableCell align="right">{row.delivered}</TableCell>
             </TableRow>
           ))}
         </TableBody>

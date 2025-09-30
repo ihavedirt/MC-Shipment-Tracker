@@ -23,7 +23,8 @@ export default function NewTracking() {
   };
 
   const handleCreate = () => {
-    // TODO: submit { trackingNumber, reference, carrier, emails }
+    // TODO: submit data to api and then insert into db
+
   };
 
   return (
@@ -46,7 +47,6 @@ export default function NewTracking() {
         style={{ width: '100%', padding: '8px' }}
       />
 
-      {/* Use MUI Select with MenuItem (recommended) */}
       <Select
         displayEmpty
         value={carrier}

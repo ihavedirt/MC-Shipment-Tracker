@@ -23,11 +23,6 @@ export default function Dashboard() {
     fetchSession();
     fetchAllTrackings();
   }, []);
-
-  // inserts a new tracking number into the database
-  const handleSubmit = async () => {    
-    await supabase.from('trackings').insert({ tracking_number: currentTrackingNumber });
-  }
   
   // makes a POST request to the tracking api
   // input: tracking number/order number as a string
@@ -99,25 +94,9 @@ export default function Dashboard() {
   return (
     <div>
       <div style={{ marginTop: '20px', marginLeft: '20px' }}>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            type="text"
-            value={currentTrackingNumber}
-            onChange={(e) => setCurrentTrackingNumber(e.target.value)}
-          />
-          <Button 
-            type="submit"
-            variant="contained"
-            style={{ marginLeft: '10px', background: '#4c42a0ff' }}
-          >
-            Create Tracking
-          </Button>
-
-          <Card style={{ width: '70%', padding: "20px", marginTop: "20px" }}>
-            <NewTracking />
-          </Card>
-          
-        </form>
+        <Card style={{ width: '70%', padding: "20px", marginTop: "20px" }}>
+          <NewTracking />
+        </Card>
 
         <Button
           variant='contained'
