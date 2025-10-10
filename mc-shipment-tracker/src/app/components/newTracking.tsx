@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { TextField, Select, MenuItem, Button } from '@mui/material';
 import EmailList from './emailList';
 import { TableRowData } from './table';
+import { supabase } from '../../../utils/supabase/client';
 
 type prop = {onSuccess: () => void};
 
@@ -27,31 +28,39 @@ export default function NewTracking({ onSuccess }: prop) {
 
   // makes a POST request to the tracking api
   // input: tracking number/order number as a string
-  async function sendTrackingNumber(trackingNumber: string) {
+  async function createTracking(trackingNumber: string) {
     try{
       const res = await fetch("/api/tracking", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ trackingNumber }),
+        body: JSON.stringify({ 
+          "trackingNumber": trackingNumber,
+          "carrier": carrier, 
+          "emails": emails, 
+          "reference": reference
+         }),
       });
 
       const response = await res.json();
       console.log(response);
 
-      // convert data to TableRowData
-      const row: TableRowData = {
-        tracking_number: response.tracking_number ?? 'N/A',
-        reference: reference ?? 'N/A',
-        carrier: response.courier_code ?? 'N/A',
-        est_delivery: response.scheduled_delivery_date
-          ? new Date(response.scheduled_delivery_date).toLocaleDateString()
-          : 'N/A',
-        delivered: response.delivered ?? 'N/A',
-        delayed: response.delayed ?? 'N/A',
-      };
+      // this prolly needs to be in route.ts
+      if (response.meta.code === 4101) {
+        console.log("Tracking already exists");
+        return;
+      }
+
+      // call onSuccess to refresh the table
       onSuccess();
+
+      // clear inputs
+      setTrackingNumber('');
+      setReference('');
+      setCarrier('');
+      setEmails([]);
+      setEmailInput('');
     }
     catch(e) {
       console.error(e);
@@ -59,7 +68,7 @@ export default function NewTracking({ onSuccess }: prop) {
   }
 
   const handleCreate = () => {
-    sendTrackingNumber(trackingNumber);
+    createTracking(trackingNumber);
   };
 
   return (

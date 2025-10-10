@@ -1,10 +1,14 @@
 import { NextResponse, NextRequest } from 'next/server';
+import { supabase } from '../../../../utils/supabase/client';
 
 // Create a new tracking
 export async function POST(req: NextRequest) {
     // clientside payload
     const body = await req.json();
     const trackingNumber = body.trackingNumber;
+    const courierCode = body.carrier;
+    const emails = body.emails;
+    const reference = body.reference;
 
     const base = process.env.TRACKINGMORE_BASE_URL + '/trackings/create';
     const apiKey = process.env.TRACKINGMORE_API_KEY;
@@ -20,19 +24,6 @@ export async function POST(req: NextRequest) {
     }
 
     const url = new URL(base);
-
-    // this detects the courier
-    // turn this into a function where it takes tracking number and returns string
-    let courierCode = '';
-    if (trackingNumber.length == 18) {
-        courierCode = 'ups';
-    } else if (trackingNumber.length == 10) {
-        courierCode = 'dhl';
-    } else if (trackingNumber.length == 12) {
-        courierCode = 'fedex';
-    } else {
-        console.log('Unknown courier code format detected');
-    }
 
     // fetch to aftership
     const res = await fetch(url, {
@@ -52,6 +43,18 @@ export async function POST(req: NextRequest) {
 
     // parse to json
     const data = JSON.parse(text);
+
+    const { error } = await supabase.from('trackings').insert({
+        tracking_number: trackingNumber,
+        courier_code: courierCode,
+        reference: reference,
+        emails: emails,
+        
+    }).single();
+
+    if (error) {
+        console.error('Supabase insert error:', error);
+    }
 
     return NextResponse.json(data, { status: 200 });
 }

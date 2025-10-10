@@ -12,7 +12,7 @@ import Paper from '@mui/material/Paper';
 export type TableRowData = {
   tracking_number: string;
   reference: string;
-  carrier: string;
+  courier_code: string;
   est_delivery: string;
   delayed: string;
   delivered: string;
@@ -48,7 +48,7 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
               </TableCell>
               <TableCell align="right">{row.tracking_number}</TableCell>
               <TableCell align="right">{row.reference}</TableCell>
-              <TableCell align="right">{row.carrier}</TableCell>
+              <TableCell align="right">{row.courier_code}</TableCell>
               <TableCell align="right">{row.est_delivery}</TableCell>
               <TableCell align="right">{row.delayed}</TableCell>
               <TableCell align="right">{row.delivered}</TableCell>
