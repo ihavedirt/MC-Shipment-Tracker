@@ -1,11 +1,11 @@
 'use client'
 
-import Auth from "../components/auth";
+import AuthForm from "./auth-form";
 
 export default function Login() {
     return (
         <div>
-            <Auth />
+            <AuthForm />
         </div>
     );
 }

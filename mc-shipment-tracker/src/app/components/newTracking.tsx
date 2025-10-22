@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { TextField, Select, MenuItem, Button } from '@mui/material';
 import EmailList from './emailList';
-import { TableRowData } from './table';
-import { supabase } from '../../../utils/supabase/client';
 
 type prop = {onSuccess: () => void};
 
