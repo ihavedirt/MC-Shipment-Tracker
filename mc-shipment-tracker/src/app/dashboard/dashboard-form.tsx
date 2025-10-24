@@ -65,6 +65,10 @@ export default function DashboardForm() {
     }
   }, []);
 
+  useEffect(() => {
+    fetchAllTrackings();
+  }, []);
+
   return (
     <div>
       <div style={{ marginTop: '20px', marginLeft: '20px' }}>

@@ -8,6 +8,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { IconButton } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 export type TableRowData = {
   tracking_number: string;
@@ -35,6 +37,7 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
             <TableCell align="right">Est. Delivery</TableCell>
             <TableCell align="right">Delayed</TableCell>
             <TableCell align="right">Delivered</TableCell>
+            <TableCell align="right"></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -52,6 +55,11 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
               <TableCell align="right">{row.est_delivery}</TableCell>
               <TableCell align="right">{row.delayed}</TableCell>
               <TableCell align="right">{row.delivered}</TableCell>
+              <TableCell align="right">
+                <IconButton>
+                  <MoreVertIcon />
+                </IconButton>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
