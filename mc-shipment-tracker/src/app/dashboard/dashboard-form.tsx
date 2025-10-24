@@ -3,43 +3,67 @@
 
 import BasicTable, { TableRowData }  from '../components/table'
 import { Button, Card } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import NewTracking from '../components/newTracking';
+
+type ApiShipment = {
+  id?: string;
+  courier_code: string;
+  tracking_number: string;
+  reference?: string | null;
+  est_delivery?: string | null;
+  delayed?: boolean | null;
+  delivered?: boolean | null;
+  emails?: string[] | null;
+  created_at?: string;
+};
 
 export default function DashboardForm() {
   const [tableData, setTableData] = useState<TableRowData[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // makes a GET request to the tracking api to fetch all tracking created
-  async function fetchAllTrackings() {
+  const fetchAllTrackings = useCallback( async () => {
+    setLoading(true);
     try{
       const res = await fetch("/api/tracking", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
+        cache: 'no-store'
       });
 
+      if (!res.ok) {
+        console.log("Something went wrong with GET for table");
+      }
+
       const response = await res.json();
-      console.log(response);
+
+      // safety incase api give some weirdo stuff
+      // this will set item to empty array if response was something unexpected
+      const item : ApiShipment[] = Array.isArray(response?.data) ? response.data : [];
 
       // convert data to TableRowData[]
-      const rows: TableRowData[] = response.data.map(
-        (item: any, index: number) => ({
+      const rows: TableRowData[] = item.map(
+        (item, index) => ({
           id: index + 1,
           tracking_number: item.tracking_number ?? 'N/A',
-          carrier: item.courier_code ?? 'N/A',
-          est_delivery: item.scheduled_delivery_date ? new Date(item.scheduled_delivery_date).toLocaleDateString() : 'N/A',
-          delivered: item.delivered ?? 'N/A',
-          delayed: item.delayed ?? 'N/A'
+          reference: item.reference ?? 'N/A',
+          courier_code: item.courier_code ?? 'N/A',
+          est_delivery: item.est_delivery ? new Date(item.est_delivery).toLocaleDateString() : 'N/A',
+          delivered: String(item.delivered) ?? 'N/A',
+          delayed: String(item.delayed) ?? 'N/A'
         })
-      )
+      );
 
       setTableData(rows);
-    }
-    catch(e) {
+    } catch(e) {
       console.error(e);
+    } finally {
+      setLoading(false);
     }
-  }
+  }, []);
 
   return (
     <div>
