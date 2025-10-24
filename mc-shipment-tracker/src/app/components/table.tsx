@@ -31,7 +31,7 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
             <TableCell>No.</TableCell>
             <TableCell align="right">Tracking Number</TableCell>
             <TableCell align="right">Reference</TableCell>
-            <TableCell align="right">Carrier</TableCell>
+            <TableCell align="right">Courier</TableCell>
             <TableCell align="right">Est. Delivery</TableCell>
             <TableCell align="right">Delayed</TableCell>
             <TableCell align="right">Delivered</TableCell>

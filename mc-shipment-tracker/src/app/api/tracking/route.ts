@@ -5,10 +5,6 @@ import { createClient } from '@/utils/supabase/server';
 export async function POST(req: NextRequest) {
     // clientside payload
     const body = await req.json();
-    const trackingNumber = body.trackingNumber;
-    const courierCode = body.carrier;
-    const emails = body.emails;
-    const reference = body.reference;
 
     const base = process.env.TRACKINGMORE_BASE_URL;
     const apiKey = process.env.TRACKINGMORE_API_KEY; 
@@ -24,8 +20,12 @@ export async function POST(req: NextRequest) {
     // check for session from user cookies
     const supabase = await createClient();
     const { data: {user}, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (userErr) {
+        return NextResponse.json({ error: "Auth error", details: userErr }, { status: 401 });
+    }
+    if (!user) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     // fetch to aftership
@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
             'Tracking-Api-Key': apiKey,
         },
         body: JSON.stringify({
-            tracking_number: trackingNumber,
-            courier_code: courierCode,
+            tracking_number: body.trackingNumber,
+            courier_code: body.carrier,
         }),
     });
 
@@ -51,6 +51,8 @@ export async function POST(req: NextRequest) {
         trackingData = null;
     }
 
+    console.log(trackingRes);
+
     // get delayed and devliered status
     let delayed_status = false;
     if (trackingData.data.delayed === true) { // this needs to be fixed, using today > est_delivery wont work cuz thatll be too late. maybe check for status updateds that warrant delays
@@ -62,21 +64,22 @@ export async function POST(req: NextRequest) {
         delivered_status = true;
     }
 
+    const payload = {
+        tracking_number: body.trackingNumber,
+        courier_code: body.carrier,
+        reference: body.reference ?? null,
+        emails: body.emails ?? [],
+        est_delivery: trackingData?.est_delivery ?? null,
+        delayed: delayed_status,
+        delivered: delivered_status,
+    };
+
     // insert to db
     const { data: inserted, error: insertError } = await supabase
         .from('shipments')
-        .insert({
-            tracking_number: trackingNumber,
-            courier_code: courierCode,
-            reference: reference ?? null,
-            emails: emails ?? [],
-            est_delivery: trackingData?.est_delivery ?? null,
-            delayed: delayed_status,
-            delivered: delivered_status,
-        }
-    )
-    .select()
-    .single();
+        .insert(payload)
+        .select()
+        .single();
 
     if (insertError) {
         return NextResponse.json({ error: 'Insert failed', details: insertError }, { status: 500 });
@@ -91,8 +94,12 @@ export async function GET() {
     // check for session from user cookies
     const supabase = await createClient();
     const { data: {user}, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    if (userErr) {
+        return NextResponse.json({ error: "Auth error", details: userErr }, { status: 401 });
+    }
+    if (!user) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const { data, error } = await supabase
