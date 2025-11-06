@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import BasicTable, { TableRowData }  from '../components/table'
+// import BasicTable, { TableRowData }  from '../components/table'
+import EnhancedTable, { TableRowData }  from '../components/enhancedTable'
 import { Button, Card } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import NewTracking from '../components/newTracking';
@@ -12,8 +13,8 @@ type ApiShipment = {
   tracking_number: string;
   reference?: string | null;
   est_delivery?: string | null;
+  status?: string | null;
   delayed?: boolean | null;
-  delivered?: boolean | null;
   emails?: string[] | null;
   created_at?: string;
 };
@@ -52,8 +53,9 @@ export default function DashboardForm() {
           reference: item.reference ?? 'N/A',
           courier_code: item.courier_code ?? 'N/A',
           est_delivery: item.est_delivery ? new Date(item.est_delivery).toLocaleDateString() : 'N/A',
-          delivered: String(item.delivered) ?? 'N/A',
-          delayed: String(item.delayed) ?? 'N/A'
+          delayed: String(item.delayed) ?? 'N/A',
+          status: String(item.status) ?? 'N/A',
+          emails: item.emails ?? [],
         })
       );
 
@@ -76,16 +78,15 @@ export default function DashboardForm() {
           <NewTracking onSuccess={fetchAllTrackings}/>
         </Card>
 
-        <Button
+        {/* <Button
           variant='contained'
-          onClick={() => fetchAllTrackings()}
           style={{ marginRight: '10px', float: 'right' }}
         >
-          Get all Trackings
-        </Button>
+          Preferences
+        </Button> */}
       </div>
       <div style={{ marginTop: '20px' }}>
-        <BasicTable data={tableData} />
+        <EnhancedTable data={tableData} />
       </div>
     </div>
   );

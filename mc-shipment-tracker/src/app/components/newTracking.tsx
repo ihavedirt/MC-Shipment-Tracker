@@ -41,14 +41,7 @@ export default function NewTracking({ onSuccess }: prop) {
          }),
       });
 
-      const response = await res.json();
-      console.log(response);
-
-      // this prolly needs to be in route.ts
-      if (response.meta.code === 4101) {
-        console.log("Tracking already exists");
-        return;
-      }
+      console.log(res);
 
       // call onSuccess to refresh the table
       onSuccess();
@@ -102,6 +95,7 @@ export default function NewTracking({ onSuccess }: prop) {
         <MenuItem value="ups">UPS</MenuItem>
         <MenuItem value="dhl">DHL</MenuItem>
         <MenuItem value="usps">USPS</MenuItem>
+        <MenuItem value="shippo">Shippo</MenuItem>
       </Select>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

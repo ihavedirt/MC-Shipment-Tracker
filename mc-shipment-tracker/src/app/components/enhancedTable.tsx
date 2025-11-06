@@ -1,0 +1,318 @@
+'use client';
+
+import * as React from 'react';
+import { alpha } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Checkbox from '@mui/material/Checkbox';
+import Tooltip from '@mui/material/Tooltip';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { visuallyHidden } from '@mui/utils';
+import TrackingEditor from './trackingEditor';
+
+export interface TableRowData {
+  tracking_number: string;
+  reference: string;
+  courier_code: string;
+  est_delivery: string;
+  status: string;
+  delayed: string;
+  emails?: string[];
+}
+
+type Order = 'asc' | 'desc';
+
+function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+  const av = String((a as any)[orderBy] ?? '');
+  const bv = String((b as any)[orderBy] ?? '');
+  if (bv < av) return -1;
+  if (bv > av) return 1;
+  return 0;
+}
+
+function getComparator<T>(order: Order, orderBy: keyof T): (a: T, b: T) => number {
+  return order === 'desc'
+    ? (a, b) => descendingComparator<T>(a, b, orderBy)
+    : (a, b) => -descendingComparator<T>(a, b, orderBy);
+}
+
+
+interface HeadCell {
+  id: keyof TableRowData | 'index' | 'selector' | 'actions';
+  label: string;
+  numeric?: boolean;
+  sortable?: boolean;
+}
+const headCells: readonly HeadCell[] = [
+  { id: 'selector', label: '', sortable: false },
+  { id: 'index', label: 'No.', numeric: true, sortable: false },
+  { id: 'tracking_number', label: 'Tracking Number', sortable: true },
+  { id: 'reference', label: 'Reference', sortable: true },
+  { id: 'courier_code', label: 'Courier', sortable: true },
+  { id: 'est_delivery', label: 'Est. Delivery', sortable: true },
+  { id: 'status', label: 'Status', sortable: true },
+  { id: 'delayed', label: 'Delayed', sortable: true },
+  { id: 'actions', label: '', sortable: false },
+];
+
+interface EnhancedTableHeadProps {
+  order: Order;
+  orderBy: keyof TableRowData;
+  onRequestSort: (e: React.MouseEvent<unknown>, property: keyof TableRowData) => void;
+  numSelected: number;
+  rowCount: number;
+  onSelectAllClick: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function EnhancedTableHead(props: EnhancedTableHeadProps) {
+  const { order, orderBy, onRequestSort, numSelected, rowCount, onSelectAllClick } = props;
+  const createSortHandler =
+    (property: keyof TableRowData) => (event: React.MouseEvent<unknown>) =>
+      onRequestSort(event, property);
+
+  return (
+    <TableHead>
+      <TableRow>
+        {/* select-all */}
+        <TableCell padding="checkbox">
+          <Checkbox
+            color="primary"
+            indeterminate={numSelected > 0 && numSelected < rowCount}
+            checked={rowCount > 0 && numSelected === rowCount}
+            onChange={onSelectAllClick}
+            inputProps={{ 'aria-label': 'select all rows' }}
+          />
+        </TableCell>
+
+        {headCells.slice(1).map((h) => {
+          if (!h.sortable || h.id === 'index' || h.id === 'actions') {
+            return <TableCell key={h.id} align={h.numeric ? 'right' : 'left'}>{h.label}</TableCell>;
+          }
+          const id = h.id as keyof TableRowData;
+          return (
+            <TableCell key={h.id} sortDirection={orderBy === id ? order : false}>
+              <TableSortLabel
+                active={orderBy === id}
+                direction={orderBy === id ? order : 'asc'}
+                onClick={createSortHandler(id)}
+              >
+                {h.label}
+                {orderBy === id ? (
+                  <Box component="span" sx={visuallyHidden}>
+                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                  </Box>
+                ) : null}
+              </TableSortLabel>
+            </TableCell>
+          );
+        })}
+      </TableRow>
+    </TableHead>
+  );
+}
+
+function EnhancedTableToolbar({ numSelected }: { numSelected: number }) {
+  return (
+    <Toolbar
+      sx={[
+        { pl: { sm: 2 }, pr: { xs: 1, sm: 1 } },
+        numSelected > 0 && {
+          bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
+        },
+      ]}
+    >
+      {numSelected > 0 ? (
+        <Typography sx={{ flex: '1 1 100%' }} color="inherit" variant="subtitle1">
+          {numSelected} selected
+        </Typography>
+      ) : (
+        <Typography sx={{ flex: '1 1 100%' }} variant="h6">
+          Shipments
+        </Typography>
+      )}
+
+      {/* Trash button (visual only; no handler wired) */}
+      <Tooltip title="Delete selected">
+        <IconButton aria-label="delete selected">
+          <DeleteIcon />
+        </IconButton>
+      </Tooltip>
+    </Toolbar>
+  );
+}
+
+export default function BasicTable({ data }: { data: TableRowData[] }) {
+  const safeData = Array.isArray(data) ? data : [];
+  const [order, setOrder] = React.useState<Order>('asc');
+  const [orderBy, setOrderBy] = React.useState<keyof TableRowData>('tracking_number');
+  const [page, setPage] = React.useState(0);
+  const [dense, setDense] = React.useState(false);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [selected, setSelected] = React.useState<readonly string[]>([]); // track by tracking_number
+  const [editorOpen, setEditorOpen] = React.useState(false);
+  const [editorRow, setEditorRow] = React.useState<TableRowData | null>(null);
+
+
+  const onOpenRowMenu = (row: TableRowData) => {
+    setEditorRow(row);
+    setEditorOpen(true);
+  };
+
+  const onCloseRowMenu = () => {
+    setEditorOpen(false);
+    setEditorRow(null);
+  };
+
+
+  const handleRequestSort = (_e: React.MouseEvent<unknown>, property: keyof TableRowData) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const handleSelectAllClick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelected(safeData.map((r) => r.tracking_number));
+    } else {
+      setSelected([]);
+    }
+  };
+
+  const handleRowToggle = (_e: React.MouseEvent<unknown>, key: string) => {
+    const idx = selected.indexOf(key);
+    if (idx === -1) setSelected((prev) => [...prev, key]);
+    else setSelected((prev) => [...prev.slice(0, idx), ...prev.slice(idx + 1)]);
+  };
+
+  const isSelected = (key: string) => selected.indexOf(key) !== -1;
+
+  const handleChangePage = (_e: unknown, newPage: number) => setPage(newPage);
+  const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  };
+
+  const visibleRows = React.useMemo(
+    () =>
+      [...safeData]
+        .sort(getComparator<TableRowData>(order, orderBy))
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [safeData, order, orderBy, page, rowsPerPage]
+  );
+
+  if (!safeData.length) return <div>No data available</div>;
+
+  const startIndex = page * rowsPerPage;
+
+  return (
+    <Box sx={{ width: '100%' }}>
+      <Paper sx={{ width: '100%', mb: 2 }}>
+        <EnhancedTableToolbar numSelected={selected.length} />
+
+        <TableContainer sx={{ maxHeight: 700 }}>
+          <Table stickyHeader sx={{ minWidth: 750 }} size={dense ? 'small' : 'medium'}>
+            <EnhancedTableHead
+              order={order}
+              orderBy={orderBy}
+              onRequestSort={handleRequestSort}
+              numSelected={selected.length}
+              rowCount={safeData.length}
+              onSelectAllClick={handleSelectAllClick}
+            />
+
+            <TableBody>
+              {visibleRows.map((row, idx) => {
+                const key = row.tracking_number || `row-${startIndex + idx}`;
+                const checked = isSelected(key);
+                const labelId = `enhanced-table-checkbox-${startIndex + idx}`;
+
+                return (
+                  <TableRow
+                    hover
+                    onClick={(e) => handleRowToggle(e, key)}
+                    role="checkbox"
+                    aria-checked={checked}
+                    tabIndex={-1}
+                    key={key}
+                    selected={checked}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    {/* Row checkbox */}
+                    <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        color="primary"
+                        checked={checked}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleRowToggle(e as unknown as React.MouseEvent, key);
+                        }}
+                        inputProps={{ 'aria-labelledby': labelId }}
+                      />
+                    </TableCell>
+
+                    {/* No. */}
+                    <TableCell align="right">{startIndex + idx}</TableCell>
+
+                    <TableCell component="th" id={labelId} scope="row">
+                      {row.tracking_number}
+                    </TableCell>
+                    <TableCell align="left">{row.reference}</TableCell>
+                    <TableCell align="left">{row.courier_code}</TableCell>
+                    <TableCell align="left">{row.est_delivery}</TableCell>
+                    <TableCell align="left">{row.status}</TableCell>
+                    <TableCell align="left">{row.delayed}</TableCell>
+
+                    {/* Actions (3 dots) */}
+                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                      <IconButton
+                        aria-label="row actions"
+                        onClick={(e) => onOpenRowMenu(row)}
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <TablePagination
+          component="div"
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          count={safeData.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
+
+      <FormControlLabel
+        control={<Switch checked={dense} onChange={(e) => setDense(e.target.checked)} />}
+        label="Dense padding"
+      />
+
+      <TrackingEditor
+        open={editorOpen}
+        onClose={onCloseRowMenu}
+        row={editorRow}
+      />
+    </Box>
+  );
+}

@@ -6,16 +6,17 @@ export async function POST(req: NextRequest) {
     // clientside payload
     const body = await req.json();
 
-    const base = process.env.TRACKINGMORE_BASE_URL;
-    const apiKey = process.env.TRACKINGMORE_API_KEY; 
+    const base = process.env.SHIPPO_BASE_URL;
+    const apiKey = process.env.SHIPPO_API_KEY; 
 
     // Env checks
     if (!base || !apiKey) {
-      return NextResponse.json({ error: "Missing TrackingMore configuration."}, { status: 500 });
+      return NextResponse.json({ error: "Missing shipment api configuration."}, { status: 500 });
     }
 
     // create url
-    const url = new URL('/trackings/create', base);
+    // const url = new URL('/trackings/create', base);  // trackingmore
+    const url = new URL('tracks/', base);
 
     // check for session from user cookies
     const supabase = await createClient();
@@ -33,13 +34,16 @@ export async function POST(req: NextRequest) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Tracking-Api-Key': apiKey,
+            'Authorization': `ShippoToken ${apiKey}`, 
         },
         body: JSON.stringify({
             tracking_number: body.trackingNumber,
-            courier_code: body.carrier,
+            carrier: body.carrier,
         }),
+        cache: "no-store",
     });
+
+    console.log(trackingRes);
 
     // TODO: handle non 2xx respones here
 
@@ -51,27 +55,19 @@ export async function POST(req: NextRequest) {
         trackingData = null;
     }
 
-    console.log(trackingRes);
-
     // get delayed and devliered status
     let delayed_status = false;
-    if (trackingData.data.delayed === true) { // this needs to be fixed, using today > est_delivery wont work cuz thatll be too late. maybe check for status updateds that warrant delays
-        delayed_status = true;
-    }
 
-    let delivered_status = false;
-    if (trackingData.data.delivery_status === 'Delivered' || trackingData.data.sub_status === 'delivered001' || trackingData.data.latest_event === 'DELIVERED') {
-        delivered_status = true;
-    }
+    let status = trackingData.tracking_status.status;
 
     const payload = {
         tracking_number: body.trackingNumber,
         courier_code: body.carrier,
         reference: body.reference ?? null,
         emails: body.emails ?? [],
-        est_delivery: trackingData?.est_delivery ?? null,
+        est_delivery: trackingData?.eta ?? null,
+        status: status,
         delayed: delayed_status,
-        delivered: delivered_status,
     };
 
     // insert to db
@@ -82,6 +78,9 @@ export async function POST(req: NextRequest) {
         .single();
 
     if (insertError) {
+        if (insertError.code === "23505") {
+            
+        }
         return NextResponse.json({ error: 'Insert failed', details: insertError }, { status: 500 });
     }
 
@@ -119,7 +118,32 @@ export async function UPDATE() {
 
 }
 
+export async function DELETE(req: NextRequest) {
+    const supabase = await createClient();
+    const { data: {user}, error: userErr } = await supabase.auth.getUser();
+    
+    const body = await req.json();
 
+    console.log("internal delete called");
+
+    if (userErr) {
+        return NextResponse.json({ error: "Auth error", details: userErr }, { status: 401 });
+    }
+    if (!user) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const { data, error } = await supabase
+        .from('shipments')
+        .delete()
+        .eq('tracking_number', body.trackingNumber);
+
+    if (error) {
+        return NextResponse.json({ error: 'Database error', details: error }, { status: 500 });
+    }
+
+    return NextResponse.json({ data }, { status: 200 });
+}
 
 // // old get fro getting trackingmore trackings from their api
 // // Get all trackings

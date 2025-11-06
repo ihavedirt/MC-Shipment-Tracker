@@ -145,10 +145,9 @@ export default function AccountForm({ user }: { user: User | null }) {
               />
 
               <TextField
-                label="Username"
+                label="Phone"
                 value={username ?? ''}
                 onChange={(e) => setUsername(e.target.value)}
-                helperText="3+ characters, unique"
                 fullWidth
                 InputProps={{
                   startAdornment: (
