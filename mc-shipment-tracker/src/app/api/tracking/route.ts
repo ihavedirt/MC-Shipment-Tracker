@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
         est_delivery: trackingData?.eta ?? null,
         status: status,
         delayed: delayed_status,
+        user_id: user.id,
     };
 
     // insert to db
@@ -103,7 +104,8 @@ export async function GET() {
 
     const { data, error } = await supabase
         .from('shipments')
-        .select('*');
+        .select('*')
+        .eq('user_id', user.id);
 
     if (error) {
         return NextResponse.json({ error: 'Database error', details: error }, { status: 500 });
@@ -113,18 +115,15 @@ export async function GET() {
 }
 
 
-// might be worth to implement an update function which gets all trackings from trackingmore and then adds to the database the trackings which are not in db yet
 export async function UPDATE() {
 
 }
 
+// deletes given tracking numbers
 export async function DELETE(req: NextRequest) {
+    // check for session from user cookies
     const supabase = await createClient();
-    const { data: {user}, error: userErr } = await supabase.auth.getUser();
-    
-    const body = await req.json();
-
-    console.log("internal delete called");
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
 
     if (userErr) {
         return NextResponse.json({ error: "Auth error", details: userErr }, { status: 401 });
@@ -133,17 +132,38 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
+    const body = await req.json().catch(() => ({}));
+
+    // Normalize trackingNumber(s) and validate input
+    const tnRaw = body?.trackingNumber;
+    const arr = Array.isArray(tnRaw) ? tnRaw : [tnRaw];
+    const trackingNumbers = arr
+        .map((v: unknown) => String(v ?? '').trim())
+        .filter((s: string) => s.length > 0);
+
+    if (!trackingNumbers.length) {
+        return NextResponse.json({ error: 'Missing trackingNumber(s)' }, { status: 400 });
+    }
+
+    // Delete only rows owned by the current user
     const { data, error } = await supabase
         .from('shipments')
         .delete()
-        .eq('tracking_number', body.trackingNumber);
+        .in('tracking_number', trackingNumbers)
+        .eq('user_id', user.id)
+        .select(); // return deleted rows to count
 
     if (error) {
         return NextResponse.json({ error: 'Database error', details: error }, { status: 500 });
     }
 
-    return NextResponse.json({ data }, { status: 200 });
+    if (!data || data.length === 0) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, deleted: data.length }, { status: 200 });
 }
+
 
 // // old get fro getting trackingmore trackings from their api
 // // Get all trackings

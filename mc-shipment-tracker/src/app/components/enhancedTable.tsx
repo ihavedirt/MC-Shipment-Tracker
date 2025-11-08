@@ -21,8 +21,29 @@ import Switch from '@mui/material/Switch';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { Chip } from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
 import TrackingEditor from './trackingEditor';
+import BulkDeleteConfirmation from './bulkDeleteConfirm';
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'PRE_TRANSIT':
+      return { backgroundColor: '#BBDEFB', color: '#000000ff' };
+    case 'TRANSIT':
+      return { backgroundColor: '#1976D2', color: '#000000ff' };
+    case 'DELIVERED':
+      return { backgroundColor: '#2E7D32', color: '#000000ff' };
+    case 'RETURNED':
+      return { backgroundColor: '#E57373', color: '#000000ff' };
+    case 'FAILURE':
+      return { backgroundColor: '#C62828', color: '#000000ff' };
+    case 'UNKNOWN':
+      return { backgroundColor: '#BDBDBD', color: '#000000ff' };
+    default:
+      return { backgroundColor: '#BDBDBD', color: '#000000ff' };
+  }
+}
 
 export interface TableRowData {
   tracking_number: string;
@@ -57,6 +78,7 @@ interface HeadCell {
   numeric?: boolean;
   sortable?: boolean;
 }
+
 const headCells: readonly HeadCell[] = [
   { id: 'selector', label: '', sortable: false },
   { id: 'index', label: 'No.', numeric: true, sortable: false },
@@ -125,7 +147,18 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
   );
 }
 
-function EnhancedTableToolbar({ numSelected }: { numSelected: number }) {
+function EnhancedTableToolbar({ numSelected, selected, onSuccess }: { numSelected: number, selected: readonly string[], onSuccess: () => void }) {
+  const [bulkDeleteConfirmationOpen, setBulkDeleteConfirmationOpen] = React.useState(false);
+
+  const onOpenBulkDeleteConfirmation = () => {
+    setBulkDeleteConfirmationOpen(true);
+  }
+
+  const onCloseBulkDeleteConfirmation = () => {
+    setBulkDeleteConfirmationOpen(false);
+    
+  }
+
   return (
     <Toolbar
       sx={[
@@ -145,17 +178,27 @@ function EnhancedTableToolbar({ numSelected }: { numSelected: number }) {
         </Typography>
       )}
 
-      {/* Trash button (visual only; no handler wired) */}
       <Tooltip title="Delete selected">
-        <IconButton aria-label="delete selected">
+        <IconButton 
+          aria-label="delete selected" 
+          onClick={(e) => onOpenBulkDeleteConfirmation()} 
+          disabled={numSelected === 0}
+        >
           <DeleteIcon />
         </IconButton>
       </Tooltip>
+
+      <BulkDeleteConfirmation
+        open={bulkDeleteConfirmationOpen}
+        onClose={onCloseBulkDeleteConfirmation}
+        selectedRows={selected}
+        onSuccess={onSuccess}
+      />
     </Toolbar>
   );
 }
 
-export default function BasicTable({ data }: { data: TableRowData[] }) {
+export default function BasicTable({ data, onSuccess }: { data: TableRowData[], onSuccess: () => void }) {
   const safeData = Array.isArray(data) ? data : [];
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof TableRowData>('tracking_number');
@@ -166,6 +209,11 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editorRow, setEditorRow] = React.useState<TableRowData | null>(null);
 
+  // When a bulk delete succeeds, refresh data and clear selection
+  const handleBulkDeleteSuccess = React.useCallback(() => {
+    onSuccess();
+    setSelected([]);
+  }, [onSuccess]);
 
   const onOpenRowMenu = (row: TableRowData) => {
     setEditorRow(row);
@@ -206,6 +254,12 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
     setPage(0);
   };
 
+  // Reconcile selection whenever table data changes (remove keys that no longer exist)
+  React.useEffect(() => {
+    const keys = new Set(safeData.map((r) => r.tracking_number));
+    setSelected((prev) => prev.filter((k) => keys.has(k)));
+  }, [safeData]);
+
   const visibleRows = React.useMemo(
     () =>
       [...safeData]
@@ -221,7 +275,7 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar numSelected={selected.length} selected={selected} onSuccess={handleBulkDeleteSuccess} />
 
         <TableContainer sx={{ maxHeight: 700 }}>
           <Table stickyHeader sx={{ minWidth: 750 }} size={dense ? 'small' : 'medium'}>
@@ -273,7 +327,9 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
                     <TableCell align="left">{row.reference}</TableCell>
                     <TableCell align="left">{row.courier_code}</TableCell>
                     <TableCell align="left">{row.est_delivery}</TableCell>
-                    <TableCell align="left">{row.status}</TableCell>
+                    <TableCell align="left">
+                      <Chip label={row.status} sx={getStatusColor(row.status)} />
+                    </TableCell>
                     <TableCell align="left">{row.delayed}</TableCell>
 
                     {/* Actions (3 dots) */}
@@ -312,6 +368,7 @@ export default function BasicTable({ data }: { data: TableRowData[] }) {
         open={editorOpen}
         onClose={onCloseRowMenu}
         row={editorRow}
+        onSuccess={onSuccess}
       />
     </Box>
   );

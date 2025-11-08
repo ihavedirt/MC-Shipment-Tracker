@@ -22,9 +22,10 @@ export type Props = {
   open: boolean;
   onClose: () => void;
   row?: TableRowData | null;
+  onSuccess: () => void;
 };
 
-export default function TrackingEditor({ open, onClose, row }: Props) {
+export default function TrackingEditor({ open, onClose, row, onSuccess }: Props) {
   const [reference, setReference] = React.useState('');
   const [emails, setEmails] = React.useState<string[]>([]);
   const [emailInput, setEmailInput] = React.useState('');
@@ -84,6 +85,7 @@ export default function TrackingEditor({ open, onClose, row }: Props) {
 
     console.log('TrackingEditor submit:', payload);
     onClose();
+    onSuccess();
   };
 
   const handleDelete = async () => {
@@ -108,6 +110,7 @@ export default function TrackingEditor({ open, onClose, row }: Props) {
       console.error(e);
     } finally {
       onClose();
+      onSuccess();
     }
   }
 

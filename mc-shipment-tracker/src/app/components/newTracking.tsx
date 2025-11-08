@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { TextField, Select, MenuItem, Button } from '@mui/material';
 import EmailList from './emailList';
 
-type prop = {onSuccess: () => void};
-
-export default function NewTracking({ onSuccess }: prop) {
+export default function NewTracking({ onSuccess }: { onSuccess: () => void}) {
   const [emails, setEmails] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');

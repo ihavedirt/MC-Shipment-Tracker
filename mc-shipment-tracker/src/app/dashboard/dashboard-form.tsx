@@ -86,7 +86,7 @@ export default function DashboardForm() {
         </Button> */}
       </div>
       <div style={{ marginTop: '20px' }}>
-        <EnhancedTable data={tableData} />
+        <EnhancedTable data={tableData} onSuccess={fetchAllTrackings} />
       </div>
     </div>
   );
