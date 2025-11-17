@@ -49,9 +49,9 @@ export interface TableRowData {
   tracking_number: string;
   reference: string;
   courier_code: string;
-  est_delivery: string;
+  eta: string;
   status: string;
-  delayed: string;
+  delay_status: string;
   emails?: string[];
 }
 
@@ -85,9 +85,9 @@ const headCells: readonly HeadCell[] = [
   { id: 'tracking_number', label: 'Tracking Number', sortable: true },
   { id: 'reference', label: 'Reference', sortable: true },
   { id: 'courier_code', label: 'Courier', sortable: true },
-  { id: 'est_delivery', label: 'Est. Delivery', sortable: true },
+  { id: 'eta', label: 'Est. Delivery', sortable: true },
   { id: 'status', label: 'Status', sortable: true },
-  { id: 'delayed', label: 'Delayed', sortable: true },
+  { id: 'delay_status', label: 'Delay Status', sortable: true },
   { id: 'actions', label: '', sortable: false },
 ];
 
@@ -203,7 +203,6 @@ export default function BasicTable({ data, onSuccess }: { data: TableRowData[], 
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof TableRowData>('tracking_number');
   const [page, setPage] = React.useState(0);
-  const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [selected, setSelected] = React.useState<readonly string[]>([]); // track by tracking_number
   const [editorOpen, setEditorOpen] = React.useState(false);
@@ -278,7 +277,7 @@ export default function BasicTable({ data, onSuccess }: { data: TableRowData[], 
         <EnhancedTableToolbar numSelected={selected.length} selected={selected} onSuccess={handleBulkDeleteSuccess} />
 
         <TableContainer sx={{ maxHeight: 700 }}>
-          <Table stickyHeader sx={{ minWidth: 750 }} size={dense ? 'small' : 'medium'}>
+          <Table stickyHeader sx={{ minWidth: 750 }} size={'small'}>
             <EnhancedTableHead
               order={order}
               orderBy={orderBy}
@@ -326,11 +325,11 @@ export default function BasicTable({ data, onSuccess }: { data: TableRowData[], 
                     </TableCell>
                     <TableCell align="left">{row.reference}</TableCell>
                     <TableCell align="left">{row.courier_code}</TableCell>
-                    <TableCell align="left">{row.est_delivery}</TableCell>
+                    <TableCell align="left">{row.eta}</TableCell>
                     <TableCell align="left">
                       <Chip label={row.status} sx={getStatusColor(row.status)} />
                     </TableCell>
-                    <TableCell align="left">{row.delayed}</TableCell>
+                    <TableCell align="left">{row.delay_status}</TableCell>
 
                     {/* Actions (3 dots) */}
                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
@@ -358,11 +357,6 @@ export default function BasicTable({ data, onSuccess }: { data: TableRowData[], 
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
-
-      <FormControlLabel
-        control={<Switch checked={dense} onChange={(e) => setDense(e.target.checked)} />}
-        label="Dense padding"
-      />
 
       <TrackingEditor
         open={editorOpen}

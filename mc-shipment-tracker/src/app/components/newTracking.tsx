@@ -1,10 +1,22 @@
-'use client'
+'use client';
 
 import { useState } from 'react';
-import { TextField, Select, MenuItem, Button } from '@mui/material';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardContent,
+  Stack,
+  TextField,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
 import EmailList from './emailList';
 
-export default function NewTracking({ onSuccess }: { onSuccess: () => void}) {
+export default function NewTracking({ onSuccess }: { onSuccess: () => void }) {
   const [emails, setEmails] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -22,36 +34,31 @@ export default function NewTracking({ onSuccess }: { onSuccess: () => void}) {
     setEmails((prev) => prev.filter((e) => e !== email));
   };
 
-  // makes a POST request to the tracking api
-  // input: tracking number/order number as a string
   async function createTracking(trackingNumber: string) {
-    try{
-      const res = await fetch("/api/tracking", {
-        method: "POST",
+    try {
+      const res = await fetch('/api/tracking', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          "trackingNumber": trackingNumber,
-          "carrier": carrier, 
-          "emails": emails, 
-          "reference": reference
-         }),
+        body: JSON.stringify({
+          trackingNumber,
+          carrier,
+          emails,
+          reference,
+        }),
       });
 
       console.log(res);
 
-      // call onSuccess to refresh the table
       onSuccess();
 
-      // clear inputs
       setTrackingNumber('');
       setReference('');
       setCarrier('');
       setEmails([]);
       setEmailInput('');
-    }
-    catch(e) {
+    } catch (e) {
       console.error(e);
     }
   }
@@ -61,61 +68,95 @@ export default function NewTracking({ onSuccess }: { onSuccess: () => void}) {
   };
 
   return (
-    <div>
-      <TextField
-        type="text"
-        placeholder="Tracking Number"
-        variant="outlined"
-        value={trackingNumber}
-        onChange={(e) => setTrackingNumber(e.target.value)}
-        style={{ width: '100%', padding: '8px' }}
+    <Card
+      variant="outlined"
+      sx={{
+        width: '100%'
+      }}
+    >
+      <CardHeader
+        title="New Tracking"
+        subheader="Create a tracked shipment and set who gets notified"
       />
 
-      <TextField
-        type="text"
-        placeholder="Reference (Optional)"
-        variant="outlined"
-        value={reference}
-        onChange={(e) => setReference(e.target.value)}
-        style={{ width: '100%', padding: '8px' }}
-      />
+      <CardContent>
+        <Stack spacing={3}>
+          {/* Tracking + reference */}
+          <Stack spacing={1.5}>
+            <TextField
+              label="Tracking number"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={trackingNumber}
+              onChange={(e) => setTrackingNumber(e.target.value)}
+            />
+            <TextField
+              label="Reference (optional)"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+            />
+          </Stack>
 
-      <Select
-        displayEmpty
-        value={carrier}
-        onChange={(e) => setCarrier(e.target.value as string)}
-        style={{ width: '100%', padding: '8px', scale: 0.98 }}
-      >
-        <MenuItem value="" disabled>
-          Carrier
-        </MenuItem>
-        <MenuItem value="fedex">FedEx</MenuItem>
-        <MenuItem value="ups">UPS</MenuItem>
-        <MenuItem value="dhl">DHL</MenuItem>
-        <MenuItem value="usps">USPS</MenuItem>
-        <MenuItem value="shippo">Shippo</MenuItem>
-      </Select>
+          {/* Carrier select */}
+          <FormControl fullWidth size="small">
+            <InputLabel id="carrier-label">Carrier</InputLabel>
+            <Select
+              labelId="carrier-label"
+              label="Carrier"
+              value={carrier}
+              onChange={(e) => setCarrier(e.target.value as string)}
+            >
+              <MenuItem value="fedex">FedEx</MenuItem>
+              <MenuItem value="ups">UPS</MenuItem>
+              <MenuItem value="dhl">DHL</MenuItem>
+              <MenuItem value="usps">USPS</MenuItem>
+              <MenuItem value="shippo">Shippo</MenuItem>
+            </Select>
+          </FormControl>
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <TextField
-          type="email"
-          placeholder="Emails to notify (Optional)"
-          variant="outlined"
-          value={emailInput}
-          onChange={(e) => setEmailInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') addEmail();
-          }}
-          style={{ flex: 1, padding: '8px' }}
-        />
-        <Button variant="outlined" onClick={addEmail}>Add</Button>
-      </div>
+          {/* Emails */}
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              Emails to notify (optional)
+            </Typography>
 
-      <EmailList emails={emails} onDelete={removeEmail} />
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <TextField
+                type="email"
+                placeholder="Add email"
+                variant="outlined"
+                size="small"
+                fullWidth
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addEmail();
+                }}
+              />
+              <Button variant="outlined" onClick={addEmail}>
+                Add
+              </Button>
+            </Stack>
 
-      <Button variant="contained" onClick={handleCreate} style={{ marginLeft: '10px' }}>
-        Create Tracking
-      </Button>
-    </div>
+            <EmailList emails={emails} onDelete={removeEmail} />
+          </Stack>
+
+          {/* Submit */}
+          <Stack direction="row" justifyContent="flex-end">
+            <Button
+              variant="contained"
+              onClick={handleCreate}
+              disabled={!trackingNumber || !carrier}
+            >
+              Create tracking
+            </Button>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }

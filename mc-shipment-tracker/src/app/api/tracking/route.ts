@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     // get delayed and devliered status
-    let delayed_status = false;
+    let delay_status = null;
 
     let status = trackingData.tracking_status.status;
 
@@ -65,9 +65,9 @@ export async function POST(req: NextRequest) {
         courier_code: body.carrier,
         reference: body.reference ?? null,
         emails: body.emails ?? [],
-        est_delivery: trackingData?.eta ?? null,
+        eta: trackingData?.eta ?? null,
         status: status,
-        delayed: delayed_status,
+        delay_status: delay_status,
         user_id: user.id,
     };
 

@@ -3,18 +3,19 @@
 
 // import BasicTable, { TableRowData }  from '../components/table'
 import EnhancedTable, { TableRowData }  from '../components/enhancedTable'
-import { Button, Card } from '@mui/material';
+import { Box, Button, Card, Grid } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import NewTracking from '../components/newTracking';
+import EmailNoficationEditor from '../components/emailNoficationEditor';
 
 type ApiShipment = {
   id?: string;
   courier_code: string;
   tracking_number: string;
   reference?: string | null;
-  est_delivery?: string | null;
+  eta?: string | null;
   status?: string | null;
-  delayed?: boolean | null;
+  delay_status?: boolean | null;
   emails?: string[] | null;
   created_at?: string;
 };
@@ -52,8 +53,8 @@ export default function DashboardForm() {
           tracking_number: item.tracking_number ?? 'N/A',
           reference: item.reference ?? 'N/A',
           courier_code: item.courier_code ?? 'N/A',
-          est_delivery: item.est_delivery ? new Date(item.est_delivery).toLocaleDateString() : 'N/A',
-          delayed: String(item.delayed) ?? 'N/A',
+          eta: item.eta ? new Date(item.eta).toLocaleDateString() : 'N/A',
+          delay_status: String(item.delay_status) ?? 'N/A',
           status: String(item.status) ?? 'N/A',
           emails: item.emails ?? [],
         })
@@ -73,18 +74,19 @@ export default function DashboardForm() {
 
   return (
     <div>
-      <div style={{ marginTop: '20px', marginLeft: '20px' }}>
-        <Card style={{ width: '70%', padding: "20px", marginTop: "20px" }}>
-          <NewTracking onSuccess={fetchAllTrackings}/>
-        </Card>
+      <Box sx={{ p: 3, width: '100%' }}>
+        <Grid container spacing={2}>
+          
+          <Grid size={8}>
+            <NewTracking onSuccess={fetchAllTrackings} />
+          </Grid>
 
-        {/* <Button
-          variant='contained'
-          style={{ marginRight: '10px', float: 'right' }}
-        >
-          Preferences
-        </Button> */}
-      </div>
+          <Grid size={4}>
+            <EmailNoficationEditor />
+          </Grid>
+
+        </Grid>
+      </Box>
       <div style={{ marginTop: '20px' }}>
         <EnhancedTable data={tableData} onSuccess={fetchAllTrackings} />
       </div>
