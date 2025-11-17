@@ -110,9 +110,9 @@ export async function GET() {
 }
 
 
-export async function UPDATE() {
+// export async function UPDATE() {
 
-}
+// }
 
 // deletes given tracking numbers
 export async function DELETE(req: NextRequest) {
