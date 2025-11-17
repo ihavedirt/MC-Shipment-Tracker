@@ -58,8 +58,8 @@ export interface TableRowData {
 type Order = 'asc' | 'desc';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  const av = String((a as any)[orderBy] ?? '');
-  const bv = String((b as any)[orderBy] ?? '');
+  const av = String((a)[orderBy] ?? '');
+  const bv = String((b)[orderBy] ?? '');
   if (bv < av) return -1;
   if (bv > av) return 1;
   return 0;

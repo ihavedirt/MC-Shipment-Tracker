@@ -16,7 +16,7 @@ type ShipmentRow = {
 }
 
 type ShippoPayload = {
-
+    event: string;
 }
 
 const SHIPPO_WEBHOOK_SECRET = process.env.SHIPPO_WEBHOOK_SECRET;

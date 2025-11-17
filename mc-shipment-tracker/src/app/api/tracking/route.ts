@@ -48,17 +48,12 @@ export async function POST(req: NextRequest) {
     // TODO: handle non 2xx respones here
 
     // parse response
-    let trackingData: any = null;
+    let trackingData = null;
     try {
         trackingData = await trackingRes.json();
     } catch {
         trackingData = null;
     }
-
-    // get delayed and devliered status
-    let delay_status = null;
-
-    let status = trackingData.tracking_status.status;
 
     const payload = {
         tracking_number: body.trackingNumber,
@@ -66,8 +61,8 @@ export async function POST(req: NextRequest) {
         reference: body.reference ?? null,
         emails: body.emails ?? [],
         eta: trackingData?.eta ?? null,
-        status: status,
-        delay_status: delay_status,
+        status: trackingData.tracking_status.status,
+        delay_status: null,
         user_id: user.id,
     };
 

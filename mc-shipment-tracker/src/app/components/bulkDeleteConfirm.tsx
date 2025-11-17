@@ -9,7 +9,6 @@ import {
   DialogActions,
   Button,
 } from '@mui/material';
-import type { TableRowData } from './enhancedTable';
 
 export type Props = {
   open: boolean;
