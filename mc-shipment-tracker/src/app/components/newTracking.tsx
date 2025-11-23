@@ -69,7 +69,6 @@ export default function NewTracking({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <Card
-      variant="outlined"
       sx={{
         width: '100%'
       }}

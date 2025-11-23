@@ -3,7 +3,7 @@
 
 // import BasicTable, { TableRowData }  from '../components/table'
 import EnhancedTable, { TableRowData }  from '../components/enhancedTable'
-import { Box, Button, Card, Grid } from '@mui/material';
+import { Box, Button, Card, Container, Grid } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import NewTracking from '../components/newTracking';
 import EmailNoficationEditor from '../components/emailNoficationEditor';
@@ -74,9 +74,9 @@ export default function DashboardForm() {
 
   return (
     <div>
-      <Box sx={{ p: 3, width: '100%' }}>
+      <Container maxWidth="xl" sx={{ mt: 3 }}>
+      <Box>
         <Grid container spacing={2}>
-          
           <Grid size={8}>
             <NewTracking onSuccess={fetchAllTrackings} />
           </Grid>
@@ -87,9 +87,10 @@ export default function DashboardForm() {
 
         </Grid>
       </Box>
-      <div style={{ marginTop: '20px' }}>
+      <Box marginTop={'20px'}>
         <EnhancedTable data={tableData} onSuccess={fetchAllTrackings} />
-      </div>
+      </Box>
+      </Container>
     </div>
   );
 }
