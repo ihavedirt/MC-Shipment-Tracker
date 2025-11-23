@@ -92,9 +92,9 @@ export async function POST(req: NextRequest) {
 
 
 }
-
+/*
 async function sendDelayEmail(shipment: any) {
     
     console.log("Delay detected — send email to:", shipment.emails);
 
-}
+}*/
