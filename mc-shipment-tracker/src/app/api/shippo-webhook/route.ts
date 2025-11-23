@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
-
+/*
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -25,7 +25,7 @@ function verifyShippoSignature(rawBody: string, signatureHeader: string | null) 
     } catch {
         return false;
     }
-}
+}*/
 
 export async function POST(req: NextRequest) {
     const rawBody = await req.text();                         // need to parse as text for HMAC
@@ -89,9 +89,8 @@ export async function POST(req: NextRequest) {
     await supabase.from("shipments").update(update).eq("id", shipment.id);
 
     return NextResponse.json({ ok: true });*/
-
-
 }
+
 /*
 async function sendDelayEmail(shipment: any) {
     
