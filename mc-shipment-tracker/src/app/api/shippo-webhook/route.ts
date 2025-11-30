@@ -1,99 +1,96 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
-/*
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { createClient } from '@/utils/supabase/server';
 
-const SHIPPO_WEBHOOK_SECRET = process.env.SHIPPO_WEBHOOK_SECRET!;
+function isDelayed(currentEtaStr: string | null, originalEtaStr: string | null): string {
+  if (!currentEtaStr || !originalEtaStr) {
+    return 'NO_INFO';
+  }
+  
+  const currentEta = new Date(currentEtaStr).getTime();
+  const originalEta = new Date(originalEtaStr).getTime();
 
-function verifyShippoSignature(rawBody: string, signatureHeader: string | null) {
-    if (!signatureHeader || !SHIPPO_WEBHOOK_SECRET) return false;
-
-    const expected = crypto
-        .createHmac("sha256", SHIPPO_WEBHOOK_SECRET)
-        .update(rawBody, "utf8")
-        .digest("hex");
-
-    try {
-        return crypto.timingSafeEqual(
-        Buffer.from(expected),
-        Buffer.from(signatureHeader)
-        );
-    } catch {
-        return false;
-    }
-}*/
-
-export async function POST(req: NextRequest) {
-    const rawBody = await req.text();                         // need to parse as text for HMAC
-    const sigHeader = req.headers.get("shippo-signature");    // check exact header name
-
-    // verify HMAC
-    // const valid = verifyShippoSignature(rawBody, sigHeader);
-    // if (!valid) {
-    //     console.error("Invalid Shippo signature");
-    //     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    // }
-
-    // safe to parse JSON now
-    const payload = JSON.parse(rawBody);
-    console.log(payload);
-
-    return NextResponse.json({ status: 200 });
-    /*
-    const trackingNumber = payload.data?.tracking_number;
-    const carrierCode = payload.data?.carrier;
-    const rawEta = payload.data?.eta;
-    const newStatus = payload.data?.tracking_status?.status;
-    const statusDate = payload.data?.tracking_status?.status_date;
-
-    const newEta = rawEta ? rawEta.split("T")[0] : null;
-
-    // find shipment
-    const { data: shipments } = await supabase
-        .from("shipments")
-        .select("*")
-        .eq("tracking_number", trackingNumber)
-        .eq("courier_code", carrierCode)
-        .limit(1);
-
-    if (!shipments?.length) {
-        return NextResponse.json({ message: "No matching shipment" });
-    }
-
-    const shipment = shipments[0];
-    const oldEta = shipment.eta; 
-
-    // detect delay
-    let isDelayed = false;
-    if (oldEta && newEta && newEta > oldEta) {
-        isDelayed = true;
-    }
-
-    const update: any = {
-        previous_eta: shipment.eta,
-        eta: newEta,
-        status: newStatus ?? shipment.status,
-        last_status_update_at: statusDate ? statusDate.split("T")[0] : null,
-        delay_status: isDelayed ? "DELAYED" : "ON_TIME",
-    };
-
-    // send email once per delay (only when state flips to DELAYED)
-    if (isDelayed && shipment.delay_status !== "DELAYED") {
-        await sendDelayEmail(shipment);
-    }
-
-    await supabase.from("shipments").update(update).eq("id", shipment.id);
-
-    return NextResponse.json({ ok: true });*/
+  if (currentEta > originalEta) {
+    return 'DELAYED';
+  } else if (currentEta < originalEta) {
+    return 'AHEAD_OF_SCHEDULE';
+  } else {
+    return 'ON_SCHEDULE';
+  }
 }
 
-/*
-async function sendDelayEmail(shipment: any) {
-    
-    console.log("Delay detected — send email to:", shipment.emails);
+function delayHandler() {
+    console.log("delayed");
+}
 
-}*/
+export async function POST(req: NextRequest) {
+
+    // should implement a mechanism to verify the Shippo signature
+
+    let payload: any;
+    try {
+        payload = await req.json();
+    } catch (error) {
+        return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+    }
+    
+    const supabase = await createClient();
+
+    if (payload.event !== 'track_updated') {
+        // We only care about tracking updates. Ignore other events and return OK.
+        return NextResponse.json({ message: `Ignored event type: ${payload.event}` }, { status: 200 });
+    }
+
+    const data = payload.data;
+    const { 
+        tracking_number, 
+        carrier, 
+        eta: current_eta_raw,
+        original_eta: original_eta_raw,
+    } = data;
+    
+    const current_status = data.tracking_status?.status;
+    const status_date = data.tracking_status?.status_date;
+
+    if (!tracking_number || !carrier || !current_status) {
+        return NextResponse.json({ error: 'Missing essential tracking data in payload.' }, { status: 400 });
+    }
+
+    const current_eta = current_eta_raw ? new Date(current_eta_raw).toISOString().split('T')[0] : null;
+    const previous_eta = original_eta_raw ? new Date(original_eta_raw).toISOString().split('T')[0] : null;
+    const last_status_update_at = status_date ? new Date(status_date).toISOString().split('T')[0] : null;
+
+    const delay_status = isDelayed(current_eta_raw, original_eta_raw);
+
+    const updateData = {
+        courier_code: carrier.toLowerCase(),
+        tracking_number,
+        status: current_status,
+        eta: current_eta,
+        previous_eta,
+        delay_status,
+        last_status_update_at,
+    };
+
+    const { data: updatedShipment, error } = await supabase
+        .from('shipments')
+        .update(updateData)
+        .eq('tracking_number', tracking_number)
+        .eq('courier_code', carrier.toLowerCase())
+        .select();
+
+    if (error) {
+        console.error('Supabase Update Error:', error);
+        return NextResponse.json({ error: 'Database update failed', details: error.message }, { status: 500 });
+    }
+
+    if (delay_status === 'DELAYED') {
+        delayHandler();
+    }
+
+    return NextResponse.json({ status: 200 });
+}
+
+// Generic handler for robustness
+export async function GET() {
+    return NextResponse.json({ message: 'Shippo webhook endpoint: POST requests only.' }, { status: 405 });
+}
