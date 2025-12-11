@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     if (!user) {
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-
+    console.log("temp");
     // fetch to aftership
     const trackingRes = await fetch(url, {
         method: 'POST',

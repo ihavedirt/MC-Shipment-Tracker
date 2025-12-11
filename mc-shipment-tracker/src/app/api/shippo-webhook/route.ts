@@ -2,20 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@/utils/supabase/server';
 
 function isDelayed(currentEtaStr: string | null, originalEtaStr: string | null): string {
-  if (!currentEtaStr || !originalEtaStr) {
-    return 'NO_INFO';
-  }
-  
-  const currentEta = new Date(currentEtaStr).getTime();
-  const originalEta = new Date(originalEtaStr).getTime();
+    if (!currentEtaStr || !originalEtaStr) {
+        return 'NO_INFO';
+    }
+    
+    const currentEta = new Date(currentEtaStr).getTime();
+    const originalEta = new Date(originalEtaStr).getTime();
 
-  if (currentEta > originalEta) {
-    return 'DELAYED';
-  } else if (currentEta < originalEta) {
-    return 'AHEAD_OF_SCHEDULE';
-  } else {
-    return 'ON_SCHEDULE';
-  }
+    if (currentEta > originalEta) {
+        return 'DELAYED';
+    } else if (currentEta < originalEta) {
+        return 'AHEAD_OF_SCHEDULE';
+    } else {
+        return 'ON_SCHEDULE';
+    }
 }
 
 function delayHandler() {
@@ -23,7 +23,6 @@ function delayHandler() {
 }
 
 export async function POST(req: NextRequest) {
-
     // should implement a mechanism to verify the Shippo signature
 
     let payload: any;
@@ -35,8 +34,8 @@ export async function POST(req: NextRequest) {
     
     const supabase = await createClient();
 
+    // Ignore other payloads for now
     if (payload.event !== 'track_updated') {
-        // We only care about tracking updates. Ignore other events and return OK.
         return NextResponse.json({ message: `Ignored event type: ${payload.event}` }, { status: 200 });
     }
 

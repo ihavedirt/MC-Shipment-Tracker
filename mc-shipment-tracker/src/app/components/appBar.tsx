@@ -17,8 +17,8 @@ import AdbIcon from '@mui/icons-material/Adb';
 
 import { useRouter } from 'next/navigation';
 
-const pages = ['Dashboard', 'Pricing', 'Blog'];
-const settings = ['Account', 'Dashboard', 'Logout'];
+const pages = ['Dashboard', 'Resources', 'Pricing', 'About'];
+const settings = ['Account', 'Logout'];
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
@@ -40,15 +40,18 @@ function ResponsiveAppBar() {
     setAnchorElUser(null);
   };
 
+  const handleNavMenuClick = (page: string) => {
+    handleCloseNavMenu();
+    const path = `/${page.toLowerCase()}`; 
+    router.push(path);
+  };
+
   const handleUserMenuClick = (setting : string) => {
     handleCloseUserMenu();
 
     switch(setting) {
       case 'Account':
         router.push('/account');
-        break;
-      case 'Dashboard':
-        router.push('/dashboard');
         break;
       case 'Logout':
         break;
@@ -63,8 +66,8 @@ function ResponsiveAppBar() {
           <Typography
             variant="h6"
             noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
+            component="div"
+            onClick={() => router.push('/')}
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
@@ -73,6 +76,7 @@ function ResponsiveAppBar() {
               letterSpacing: '.3rem',
               color: 'inherit',
               textDecoration: 'none',
+              cursor: 'pointer',
             }}
           >
             TrackEZ
@@ -106,7 +110,7 @@ function ResponsiveAppBar() {
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
+                <MenuItem key={page} onClick={() => handleNavMenuClick(page)}>
                   <Typography sx={{ textAlign: 'center' }}>{page}</Typography>
                 </MenuItem>
               ))}
@@ -116,8 +120,8 @@ function ResponsiveAppBar() {
           <Typography
             variant="h5"
             noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
+            component="div"
+            onClick={() => router.push('/')}
             sx={{
               mr: 2,
               display: { xs: 'flex', md: 'none' },
@@ -127,6 +131,7 @@ function ResponsiveAppBar() {
               letterSpacing: '.3rem',
               color: 'inherit',
               textDecoration: 'none',
+              cursor: 'pointer',
             }}
           >
             TrackEZ
@@ -135,7 +140,7 @@ function ResponsiveAppBar() {
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={handleCloseNavMenu}
+                onClick={() => handleNavMenuClick(page)}
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
                 {page}
