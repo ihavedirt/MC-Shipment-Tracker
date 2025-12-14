@@ -21,7 +21,7 @@ function delayHandler(trackingNumber: string) {
 }
 
 export async function POST(req: NextRequest) {
-    let event: any;
+    let event;
     try {
         event = await req.json();
     } catch (error) {
