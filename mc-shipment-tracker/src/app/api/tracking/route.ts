@@ -6,8 +6,8 @@ export async function POST(req: NextRequest) {
     // clientside payload
     const body = await req.json();
 
-    const base = process.env.SHIPPO_BASE_URL;
-    const apiKey = process.env.SHIPPO_API_KEY; 
+    const base = process.env.EASYPOST_BASE_URL;
+    const apiKey = process.env.EASYPOST_API_KEY; 
 
     // Env checks
     if (!base || !apiKey) {
@@ -15,8 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     // create url
-    // const url = new URL('/trackings/create', base);  // trackingmore
-    const url = new URL('tracks/', base);
+    const url = `${base}/trackers`;
 
     // check for session from user cookies
     const supabase = await createClient();
@@ -28,24 +27,26 @@ export async function POST(req: NextRequest) {
     if (!user) {
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    console.log("temp");
+
+    const authString = Buffer.from(`${apiKey}:`).toString('base64');
+    
     // fetch to aftership
     const trackingRes = await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `ShippoToken ${apiKey}`, 
+            'Authorization': `Basic ${authString}`, 
         },
         body: JSON.stringify({
-            tracking_number: body.trackingNumber,
-            carrier: body.carrier,
+            tracker: {
+                tracking_code: body.trackingNumber,
+                carrier: body.carrier,
+            }
         }),
         cache: "no-store",
     });
 
     console.log(trackingRes);
-
-    // TODO: handle non 2xx respones here
 
     // parse response
     let trackingData = null;
@@ -55,15 +56,23 @@ export async function POST(req: NextRequest) {
         trackingData = null;
     }
 
+    // TODO: handle non 2xx respones here
+    if (!trackingRes.ok) {
+        return NextResponse.json({ 
+            error: "EasyPost Error", 
+            details: trackingData?.error || trackingRes.statusText 
+        }, { status: trackingRes.status });
+    }
+
     const payload = {
         tracking_number: body.trackingNumber,
         courier_code: body.carrier,
         reference: body.reference ?? null,
         emails: body.emails ?? [],
-        eta: trackingData?.eta ?? null,
-        status: trackingData.tracking_status.status,
-        delay_status: null,
+        eta: trackingData?.est_delivery_date ?? null,
+        status: trackingData?.status ?? "unknown",
         user_id: user.id,
+        easypost_id: trackingData?.id
     };
 
     // insert to db
@@ -75,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     if (insertError) {
         if (insertError.code === "23505") {
-            
+            return NextResponse.json({ error: 'Tracking number already exists' }, { status: 409 });
         }
         return NextResponse.json({ error: 'Insert failed', details: insertError }, { status: 500 });
     }
@@ -158,42 +167,3 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true, deleted: data.length }, { status: 200 });
 }
-
-
-// // old get fro getting trackingmore trackings from their api
-// // Get all trackings
-// export async function GET() {
-//     const base = process.env.TRACKINGMORE_BASE_URL + '/trackings/get';
-//     const apiKey = process.env.TRACKINGMORE_API_KEY;
-
-//     if (!base && !apiKey) {
-//         return NextResponse.json({ error: 'GET() Missing TrackingMore configuration(URL & KEY)' }, { status: 500 });
-//     }
-//     if (!base) {
-//         return NextResponse.json({ error: 'GET() Missing TrackingMore configuration(URL)' }, { status: 500 });
-//     }
-//     if (!apiKey) {
-//         return NextResponse.json({ error: 'GET() Missing TrackingMore configuration(KEY)' }, { status: 500 });
-//     }
-
-//     const url = new URL(base);
-
-//     // fetch to aftership
-//     const res = await fetch(url, {
-//         method: 'GET',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'Tracking-Api-Key': apiKey,
-//         },
-//     });
-
-//     // const res = await supabase.from('shipments').select('*').eq('user_id', session?.user.id);
-
-//     // receive as text
-//     const text = await res.text();
-    
-//     // parse to json
-//     const data = JSON.parse(text);
-
-//     return NextResponse.json(data, { status: 200 });
-// }

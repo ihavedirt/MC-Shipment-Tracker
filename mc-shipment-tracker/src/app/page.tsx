@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <Box>
       
-      {/* 1. Header/Hero Section */}
+      {/* Header/Hero Section */}
       <Box 
         sx={{ 
           bgcolor: 'grey.300',
@@ -47,7 +47,7 @@ export default function Home() {
         </Typography>
       </Box>
 
-      {/* 2. Feature/Content Blocks (Staggered Layout) */}
+      {/* Feature/Content Blocks (Staggered Layout) */}
       <Container maxWidth="lg" sx={{ py: 8 }}>
         
         {/* --- Top Staggered Block: Image Left, Text Right (4/8 split) --- */}
@@ -85,7 +85,7 @@ export default function Home() {
         </Grid>
       </Container>
 
-      {/* 3. Mid-Page Separator/CTA Block */}
+      {/* Mid-Page Separator/CTA Block */}
       <Box 
         sx={{ 
           bgcolor: 'grey.600', 
@@ -95,7 +95,7 @@ export default function Home() {
         }} 
       />
 
-      {/* 4. Footer/Summary Section (4 small items: 2 columns, 2 rows each) */}
+      {/* Footer/Summary Section (4 small items: 2 columns, 2 rows each) */}
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Grid container spacing={4}>
           

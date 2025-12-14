@@ -28,17 +28,19 @@ import BulkDeleteConfirmation from './bulkDeleteConfirm';
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'PRE_TRANSIT':
+    case 'pre_transit':
       return { backgroundColor: '#BBDEFB', color: '#000000ff' };
-    case 'TRANSIT':
+    case 'in_transit':
       return { backgroundColor: '#1976D2', color: '#000000ff' };
-    case 'DELIVERED':
+    case 'out_for_delivery':
       return { backgroundColor: '#2E7D32', color: '#000000ff' };
-    case 'RETURNED':
+    case 'delivered':
+      return { backgroundColor: '#2E7D32', color: '#000000ff' };
+    case 'returned_to_sender':
       return { backgroundColor: '#E57373', color: '#000000ff' };
-    case 'FAILURE':
+    case 'failure':
       return { backgroundColor: '#C62828', color: '#000000ff' };
-    case 'UNKNOWN':
+    case 'unknown':
       return { backgroundColor: '#BDBDBD', color: '#000000ff' };
     default:
       return { backgroundColor: '#BDBDBD', color: '#000000ff' };
@@ -51,7 +53,6 @@ export interface TableRowData {
   courier_code: string;
   eta: string;
   status: string;
-  delay_status: string;
   emails?: string[];
 }
 
@@ -87,7 +88,6 @@ const headCells: readonly HeadCell[] = [
   { id: 'courier_code', label: 'Courier', sortable: true },
   { id: 'eta', label: 'Est. Delivery', sortable: true },
   { id: 'status', label: 'Status', sortable: true },
-  { id: 'delay_status', label: 'Delay Status', sortable: true },
   { id: 'actions', label: '', sortable: false },
 ];
 
@@ -329,7 +329,6 @@ export default function BasicTable({ data, onSuccess }: { data: TableRowData[], 
                     <TableCell align="left">
                       <Chip label={row.status} sx={getStatusColor(row.status)} />
                     </TableCell>
-                    <TableCell align="left">{row.delay_status}</TableCell>
 
                     {/* Actions (3 dots) */}
                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
