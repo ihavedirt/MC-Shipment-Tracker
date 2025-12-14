@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+/*import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import sgMail from '@sendgrid/mail';
 
@@ -31,3 +31,4 @@ async function sendEmail(emailAddress: string, subject: string, body: string): P
 export async function GET(req: NextRequest) {
 
 }
+*/
