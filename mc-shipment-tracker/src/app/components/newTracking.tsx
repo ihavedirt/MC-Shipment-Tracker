@@ -113,7 +113,6 @@ export default function NewTracking({ onSuccess }: { onSuccess: () => void }) {
               <MenuItem value="ups">UPS</MenuItem>
               <MenuItem value="dhl">DHL</MenuItem>
               <MenuItem value="usps">USPS</MenuItem>
-              <MenuItem value="shippo">Shippo</MenuItem>
             </Select>
           </FormControl>
 

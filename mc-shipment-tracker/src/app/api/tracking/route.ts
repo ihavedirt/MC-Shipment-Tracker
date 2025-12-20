@@ -1,21 +1,19 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import EasyPostClient from '@easypost/api';
 
 // Create a new tracking
 export async function POST(req: NextRequest) {
     // clientside payload
     const body = await req.json();
-
-    const base = process.env.EASYPOST_BASE_URL;
     const apiKey = process.env.EASYPOST_API_KEY; 
 
     // Env checks
-    if (!base || !apiKey) {
+    if (!apiKey) {
       return NextResponse.json({ error: "Missing shipment api configuration."}, { status: 500 });
     }
 
-    // create url
-    const url = `${base}/trackers`;
+    const client = new EasyPostClient(apiKey);
 
     // check for session from user cookies
     const supabase = await createClient();
@@ -28,68 +26,45 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const authString = Buffer.from(`${apiKey}:`).toString('base64');
-    
-    // fetch to aftership
-    const trackingRes = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${authString}`, 
-        },
-        body: JSON.stringify({
-            tracker: {
-                tracking_code: body.trackingNumber,
-                carrier: body.carrier,
-            }
-        }),
-        cache: "no-store",
-    });
-
-    console.log(trackingRes);
-
-    // parse response
-    let trackingData = null;
     try {
-        trackingData = await trackingRes.json();
-    } catch {
-        trackingData = null;
-    }
+        // Create tracker using the client
+        const trackingData = await client.Tracker.create({
+            tracking_code: body.trackingNumber,
+            carrier: body.carrier,
+        });
 
-    // TODO: handle non 2xx respones here
-    if (!trackingRes.ok) {
-        return NextResponse.json({ 
-            error: "EasyPost Error", 
-            details: trackingData?.error || trackingRes.statusText 
-        }, { status: trackingRes.status });
-    }
+        // Prepare database payload
+        const payload = {
+            tracking_number: body.trackingNumber,
+            courier_code: body.carrier,
+            reference: body.reference ?? null,
+            emails: body.emails ?? [],
+            eta: trackingData.est_delivery_date ?? null,
+            status: trackingData.status ?? "unknown",
+            user_id: user.id,
+            easypost_id: trackingData.id
+        };
 
-    const payload = {
-        tracking_number: body.trackingNumber,
-        courier_code: body.carrier,
-        reference: body.reference ?? null,
-        emails: body.emails ?? [],
-        eta: trackingData?.est_delivery_date ?? null,
-        status: trackingData?.status ?? "unknown",
-        user_id: user.id,
-        easypost_id: trackingData?.id
-    };
+        // Insert to Supabase
+        const { data: inserted, error: insertError } = await supabase
+            .from('shipments')
+            .insert(payload)
+            .select()
+            .single();
 
-    // insert to db
-    const { data: inserted, error: insertError } = await supabase
-        .from('shipments')
-        .insert(payload)
-        .select()
-        .single();
-
-    if (insertError) {
-        if (insertError.code === "23505") {
-            return NextResponse.json({ error: 'Tracking number already exists' }, { status: 409 });
+        if (insertError) {
+            if (insertError.code === "23505") {
+                return NextResponse.json({ error: 'Tracking number already exists' }, { status: 409 });
+            }
+            return NextResponse.json({ error: 'Insert failed', details: insertError }, { status: 500 });
         }
-        return NextResponse.json({ error: 'Insert failed', details: insertError }, { status: 500 });
-    }
 
-    return NextResponse.json(trackingData, { status: 200 });
+        return NextResponse.json(trackingData, { status: 200 });
+
+    } catch (error: any) {
+        console.error("EasyPost SDK Error:", error);
+        return NextResponse.json({ error: "EasyPost Error", details: error.message || "Failed to create tracker" }, { status: error.status || 500 });
+    }
 }
 
 

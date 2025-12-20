@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import EasyPostClient from "@easypost/api";
 
 // Helper to calculate delay status
 function calculateDelayStatus(newEtaStr: string | null, savedEtaStr: string | null): string {
@@ -21,15 +22,22 @@ function delayHandler(trackingNumber: string) {
 }
 
 export async function POST(req: NextRequest) {
-    let event;
+    const apiKey = process.env.EASYPOST_API_KEY!;
+    const webhookSecret = process.env.EASYPOST_WEBHOOK_SECRET!;
+    const client = new EasyPostClient(apiKey);
+
+    const rawBody = await req.text();
+    const headers = Object.fromEntries(req.headers.entries());
+
     try {
-        event = await req.json();
+        // This helper validates that the request is authentic
+        client.Utils.validateWebhook(Buffer.from(rawBody), headers, webhookSecret);
     } catch (error) {
-        return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // Filter for Tracker Updates
-    // EasyPost events are wrapped in an "Event" object. 
+    const event = JSON.parse(rawBody);
+
     // We only care about "tracker.updated" or "tracker.created"
     if (event.description !== 'tracker.updated' && event.description !== 'tracker.created') {
         return NextResponse.json({ message: `Ignored event: ${event.description}` }, { status: 200 });
@@ -39,46 +47,40 @@ export async function POST(req: NextRequest) {
     const { 
         id: easypost_id,
         tracking_code,
-        carrier, 
         est_delivery_date, 
         status 
     } = tracker;
-
-    if (!easypost_id || !tracking_code) {
-        return NextResponse.json({ error: 'Missing tracking data' }, { status: 400 });
-    }
 
     const supabase = await createClient();
 
     // Fetch Existing Shipment
     const { data: existingShipment, error: fetchError } = await supabase
         .from('shipments')
-        .select('eta, delay_status, easypost_id') 
+        .select('eta, easypost_id') 
         .eq('easypost_id', easypost_id)
         .single();
 
     if (fetchError || !existingShipment) {
-        // Fallback: Try matching by tracking number + carrier if ID fails
         console.warn("Could not find by EasyPost ID, skipping update.");
-        return NextResponse.json({ error: 'Shipment not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Shipment not found' }, { status: 200 });
     }
 
+    const hasEtaChanged = existingShipment.eta !== est_delivery_date;
+    const previousEta = hasEtaChanged ? existingShipment.eta : null;
+
     // Calculate Delay
-    // We compare the incoming "est_delivery_date" against the "eta" currently in the DB.
-    // NOTE: This assumes 'eta' in your DB represents the "Original/Previous" ETA.
     const newDelayStatus = calculateDelayStatus(est_delivery_date, existingShipment.eta);
 
     // Update Database
-    const updatePayload = {
-        status: status,
-        eta: est_delivery_date,
-        last_status_update_at: new Date().toISOString(),
-        delay_status: newDelayStatus,
-    };
-
     const { error: updateError } = await supabase
         .from('shipments')
-        .update(updatePayload)
+        .update({
+            status: status,
+            eta: est_delivery_date,
+            previous_eta: previousEta,
+            last_status_update_at: new Date().toISOString(),
+            delay_status: newDelayStatus,
+        })
         .eq('easypost_id', easypost_id);
 
     if (updateError) {
@@ -91,7 +93,7 @@ export async function POST(req: NextRequest) {
         delayHandler(tracking_code);
     }
 
-    return NextResponse.json({ status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
 }
 
 // Generic handler for robustness
