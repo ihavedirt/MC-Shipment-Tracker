@@ -61,9 +61,9 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(trackingData, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error){
         console.error("EasyPost SDK Error:", error);
-        return NextResponse.json({ error: "EasyPost Error", details: error.message || "Failed to create tracker" }, { status: error.status || 500 });
+        return NextResponse.json({ error: "EasyPost Error", details: error || "Failed to create tracker" }, { status: 500 });
     }
 }
 
